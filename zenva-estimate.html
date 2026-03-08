@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zenva — Project Estimate</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0c0c0a;
+      min-height: 100vh;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: #e8e0d0;
+    }
+
+    /* HEADER */
+    .header {
+      border-bottom: 1px solid #2a2820;
+      padding: 48px 40px 32px;
+      background: linear-gradient(180deg, #111108 0%, #0c0c0a 100%);
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: #8B7355;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: 42px;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      color: #f0e8d8;
+    }
+    .subtitle {
+      margin-top: 8px;
+      color: #7a7060;
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .total-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: #8B7355;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      text-align: right;
+    }
+    .total-amount {
+      font-size: 38px;
+      font-weight: 300;
+      color: #C9A96E;
+      letter-spacing: 0.02em;
+      text-align: right;
+    }
+    .total-range {
+      font-size: 12px;
+      color: #5a5448;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* MODE TOGGLE */
+    .toggle-wrap { margin-top: 32px; }
+    .toggle {
+      display: flex;
+      border: 1px solid #2a2820;
+      border-radius: 4px;
+      overflow: hidden;
+      width: fit-content;
+    }
+    .toggle button {
+      padding: 8px 20px;
+      background: transparent;
+      color: #7a7060;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .toggle button.active {
+      background: #C9A96E;
+      color: #0c0c0a;
+    }
+    .toggle-note {
+      font-size: 12px;
+      color: #5a5448;
+      margin-top: 10px;
+    }
+
+    /* TIMELINE */
+    .timeline-bar {
+      border-bottom: 1px solid #1e1c18;
+      background: #0e0e0b;
+      padding: 20px 40px;
+    }
+    .timeline-inner { max-width: 860px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: #8B7355;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .timeline-grid {
+      display: flex;
+    }
+    .timeline-col {
+      flex: 1;
+      padding: 10px 14px;
+      border-left: 1px solid #1e1c18;
+    }
+    .timeline-col:first-child { border-left: none; }
+    .tl-label { font-size: 12px; color: #e8e0d0; letter-spacing: 0.05em; }
+    .tl-sub { font-size: 11px; color: #5a5448; margin-top: 2px; }
+    .tl-weeks { font-size: 10px; color: #3a3830; margin-top: 4px; letter-spacing: 0.1em; }
+
+    /* PHASES */
+    .phases { max-width: 860px; margin: 0 auto; padding: 32px 40px; }
+
+    .phase-block {
+      margin-bottom: 12px;
+      border: 1px solid #1e1c18;
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .phase-block.open { border-color: var(--phase-color-alpha); }
+
+    .phase-header {
+      width: 100%;
+      padding: 18px 24px;
+      background: #0e0e0b;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: inherit;
+      transition: background 0.2s;
+      text-align: left;
+    }
+    .phase-block.open .phase-header { background: #111108; }
+    .phase-icon { font-size: 18px; }
+    .phase-name { flex: 1; font-size: 15px; color: #e8e0d0; letter-spacing: 0.08em; }
+    .phase-total { font-size: 13px; letter-spacing: 0.05em; }
+    .phase-chevron { font-size: 16px; color: #3a3830; margin-left: 8px; }
+
+    .phase-body { border-top: 1px solid #1e1c18; display: none; }
+    .phase-block.open .phase-body { display: block; }
+
+    .col-headers {
+      display: grid;
+      grid-template-columns: 1fr 90px 90px 110px;
+      padding: 10px 24px;
+      background: #080807;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: #3a3830;
+      text-transform: uppercase;
+    }
+    .col-headers span:not(:first-child) { text-align: right; }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 90px 110px;
+      padding: 14px 24px;
+      border-top: 1px solid #14130f;
+      align-items: center;
+      font-size: 13px;
+    }
+    .task-row:nth-child(even) { background: #0c0c0a; }
+    .task-row:nth-child(odd) { background: #0e0e0b; }
+    .task-name { color: #d8d0c0; line-height: 1.4; }
+    .task-owner { font-size: 11px; color: #4a4840; margin-top: 3px; }
+    .task-weeks { text-align: right; font-size: 12px; color: #5a5448; }
+    .task-priority { text-align: right; }
+    .priority-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+    .task-cost { text-align: right; font-size: 14px; color: #C9A96E; }
+
+    .phase-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 12px 24px;
+      background: #080807;
+      border-top: 1px solid #1e1c18;
+      gap: 12px;
+      align-items: center;
+    }
+    .phase-footer-label { font-size: 11px; color: #3a3830; letter-spacing: 0.1em; text-transform: uppercase; }
+    .phase-footer-total { font-size: 16px; }
+
+    /* SUMMARY */
+    .summary {
+      margin-top: 32px;
+      padding: 28px 32px;
+      border: 1px solid #2a2820;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #111108 0%, #0e0c08 100%);
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .summary-phase-label { font-size: 11px; color: #4a4840; margin-bottom: 4px; }
+    .summary-phase-total { font-size: 18px; }
+    .summary-bottom {
+      border-top: 1px solid #1e1c18;
+      padding-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .summary-range-label { font-size: 11px; color: #5a5448; margin-bottom: 4px; }
+    .summary-range { font-size: 13px; color: #7a7060; }
+    .summary-mode-label { font-size: 11px; letter-spacing: 0.2em; color: #8B7355; text-transform: uppercase; margin-bottom: 6px; text-align: right; }
+    .summary-grand { font-size: 36px; color: #C9A96E; font-weight: 300; }
+
+    /* NOTES */
+    .notes {
+      margin-top: 24px;
+      padding: 20px 24px;
+      border: 1px solid #1a1815;
+      border-radius: 4px;
+      background: #0a0a08;
+    }
+    .notes-label { font-size: 11px; letter-spacing: 0.2em; color: #6B8F71; text-transform: uppercase; margin-bottom: 12px; }
+    .note-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 13px; color: #6a6458; line-height: 1.5; }
+    .note-arrow { color: #2a3a2a; flex-shrink: 0; }
+
+    /* FOOTER */
+    .footer {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 40px 48px;
+      font-size: 11px;
+      color: #2a2820;
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .header, .timeline-bar { padding: 32px 20px 24px; }
+      .phases { padding: 24px 20px; }
+      .col-headers, .task-row { grid-template-columns: 1fr 70px 110px; }
+      .col-headers span:nth-child(2), .task-weeks { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="eyebrow">Project Estimate · 2025</div>
+        <h1>ZENVA</h1>
+        <p class="subtitle">Full Brand Launch Estimate</p>
+      </div>
+      <div>
+        <div class="total-label">Estimated Total</div>
+        <div class="total-amount" id="grand-total">$0</div>
+        <div class="total-range" id="grand-range"></div>
+      </div>
+    </div>
+    <div class="toggle-wrap">
+      <div class="toggle">
+        <button class="active" onclick="setMode('lean')">Lean Budget</button>
+        <button onclick="setMode('comfortable')">Comfortable</button>
+      </div>
+      <div class="toggle-note" id="toggle-note">↳ Bootstrapped — AI-first, minimal outsourcing, founder-heavy execution</div>
+    </div>
+  </div>
+</div>
+
+<div class="timeline-bar">
+  <div class="timeline-inner">
+    <div class="section-label">Launch Timeline</div>
+    <div class="timeline-grid">
+      <div class="timeline-col" style="border-top: 2px solid #C9A96E;">
+        <div class="tl-label">Pre-launch</div>
+        <div class="tl-sub">Brand + Packaging</div>
+        <div class="tl-weeks">Wks 1–4</div>
+      </div>
+      <div class="timeline-col" style="border-top: 2px solid #8B7355;">
+        <div class="tl-label">Soft Launch</div>
+        <div class="tl-sub">Samples + Store</div>
+        <div class="tl-weeks">Wks 5–8</div>
+      </div>
+      <div class="timeline-col" style="border-top: 2px solid #6B8F71;">
+        <div class="tl-label">Full Launch</div>
+        <div class="tl-sub">30-day bundles</div>
+        <div class="tl-weeks">Wks 9–12+</div>
+      </div>
+      <div class="timeline-col" style="border-top: 2px solid #7B9BB5;">
+        <div class="tl-label">Growth</div>
+        <div class="tl-sub">Content + Paid ads</div>
+        <div class="tl-weeks">Ongoing</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="phases" id="phases-container"></div>
+
+<div class="phases" style="padding-top: 0;">
+  <div class="summary">
+    <div class="section-label">Budget Summary</div>
+    <div class="summary-grid" id="summary-grid"></div>
+    <div class="summary-bottom">
+      <div>
+        <div class="summary-range-label">Full Range</div>
+        <div class="summary-range" id="summary-range"></div>
+      </div>
+      <div>
+        <div class="summary-mode-label" id="summary-mode-label">Lean Estimate</div>
+        <div class="summary-grand" id="summary-grand">$0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-label">Founder Notes</div>
+    <div class="note-row"><span class="note-arrow">→</span><span>Formulation/compliance review is required before any product sale — budget for this early.</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span>Initial inventory run is your largest variable. Start small (500–1,000 units) to validate.</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span>Lean budget assumes you handle Shopify setup, copywriting, and ad management yourself.</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span>AI handles logo concepting, copy drafts, and content scripts — but a designer finalizes print-ready files.</span></div>
+    <div class="note-row"><span class="note-arrow">→</span><span>Paid ad budget is not included in core estimate — allocate $500–$1,500/mo separately post-launch.</span></div>
+  </div>
+</div>
+
+<div class="footer">shopzenva.com · Zenva Wellness · Internal Planning Document</div>
+
+<script>
+const phases = [
+  {
+    id: 1, phase: "Brand Identity", icon: "◈", color: "#C9A96E",
+    tasks: [
+      { task: "Logo system (primary, mark, wordmark)", low: 800, high: 2000, weeks: "1–2", owner: "AI + Designer", priority: "critical" },
+      { task: "Brand guidelines (colors, type, tone)", low: 400, high: 900, weeks: "1", owner: "AI", priority: "critical" },
+      { task: "Color-coded blend identity system", low: 200, high: 500, weeks: "0.5", owner: "AI", priority: "high" },
+      { task: "Typography selection & hierarchy", low: 0, high: 200, weeks: "0.5", owner: "AI", priority: "high" },
+    ]
+  },
+  {
+    id: 2, phase: "Packaging & Product", icon: "◻", color: "#8B7355",
+    tasks: [
+      { task: "Sachet (5×7cm) artwork – all blends", low: 600, high: 1400, weeks: "1–2", owner: "Designer", priority: "critical" },
+      { task: "30-day luxury box design + print-ready files", low: 800, high: 2000, weeks: "2", owner: "Designer", priority: "critical" },
+      { task: "7-day sample box design", low: 400, high: 900, weeks: "1", owner: "Designer", priority: "critical" },
+      { task: "Reusable shot bottle branding / sleeve", low: 300, high: 700, weeks: "1", owner: "Designer", priority: "high" },
+      { task: "Manufacturer sampling + revisions", low: 500, high: 1500, weeks: "3–6", owner: "Supplier", priority: "critical" },
+      { task: "Product photography / 3D mockups", low: 400, high: 1200, weeks: "1", owner: "AI + Photographer", priority: "high" },
+    ]
+  },
+  {
+    id: 3, phase: "Ecommerce (Shopify)", icon: "⬡", color: "#6B8F71",
+    tasks: [
+      { task: "Shopify theme setup + customization", low: 500, high: 1500, weeks: "1–2", owner: "Dev / Founder", priority: "critical" },
+      { task: "Product pages (30-day + 7-day bundles)", low: 300, high: 700, weeks: "1", owner: "Founder + AI", priority: "critical" },
+      { task: "Homepage + brand story section", low: 400, high: 900, weeks: "1", owner: "Founder + AI", priority: "high" },
+      { task: "Checkout, upsells, email flows", low: 300, high: 800, weeks: "1", owner: "Founder + AI", priority: "high" },
+      { task: "Domain, payments, legal pages", low: 100, high: 300, weeks: "0.5", owner: "Founder", priority: "medium" },
+    ]
+  },
+  {
+    id: 4, phase: "Content & Marketing", icon: "◯", color: "#7B9BB5",
+    tasks: [
+      { task: "TikTok / IG content strategy + scripts (x10)", low: 300, high: 800, weeks: "1", owner: "AI + Founder", priority: "high" },
+      { task: "Ad creatives — static (x6)", low: 400, high: 1000, weeks: "1", owner: "AI + Designer", priority: "high" },
+      { task: "Ad creatives — video / UGC (x3)", low: 600, high: 1800, weeks: "2", owner: "UGC Creator", priority: "medium" },
+      { task: "Launch graphics + announcement assets", low: 200, high: 500, weeks: "0.5", owner: "AI", priority: "high" },
+      { task: "Paid ad test budget (initial)", low: 500, high: 1500, weeks: "ongoing", owner: "Founder", priority: "medium" },
+    ]
+  },
+  {
+    id: 5, phase: "Operations & Compliance", icon: "△", color: "#9B7B8B",
+    tasks: [
+      { task: "Formulation / compliance review", low: 500, high: 2000, weeks: "2–4", owner: "Consultant", priority: "critical" },
+      { task: "3PL / fulfillment setup", low: 200, high: 600, weeks: "1–2", owner: "Founder", priority: "medium" },
+      { task: "Inventory – initial production run", low: 2000, high: 6000, weeks: "4–8", owner: "Manufacturer", priority: "critical" },
+    ]
+  }
+];
+
+const priorityStyle = {
+  critical: { bg: "#1a0a0a", text: "#ff6b6b" },
+  high:     { bg: "#0a120a", text: "#6bff9e" },
+  medium:   { bg: "#0a0a1a", text: "#6bb5ff" },
+};
+
+let mode = 'lean';
+let openPhase = null;
+
+function phaseTotal(phase) {
+  return phase.tasks.reduce((s, t) => s + (mode === 'lean' ? t.low : t.high), 0);
+}
+
+const grandLow  = phases.reduce((s, p) => s + p.tasks.reduce((a, t) => a + t.low, 0), 0);
+const grandHigh = phases.reduce((s, p) => s + p.tasks.reduce((a, t) => a + t.high, 0), 0);
+
+function fmt(n) { return '$' + n.toLocaleString(); }
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.toggle button').forEach((b, i) => {
+    b.classList.toggle('active', (i === 0 && m === 'lean') || (i === 1 && m === 'comfortable'));
+  });
+  document.getElementById('toggle-note').textContent = m === 'lean'
+    ? '↳ Bootstrapped — AI-first, minimal outsourcing, founder-heavy execution'
+    : '↳ Invest where it matters — proper designer, UGC, ad budget included';
+  render();
+}
+
+function togglePhase(id) {
+  openPhase = openPhase === id ? null : id;
+  render();
+}
+
+function render() {
+  const grandTotal = mode === 'lean' ? grandLow : grandHigh;
+  document.getElementById('grand-total').textContent = fmt(grandTotal);
+  document.getElementById('grand-range').textContent = `Range: ${fmt(grandLow)} – ${fmt(grandHigh)}`;
+  document.getElementById('summary-range').textContent = `${fmt(grandLow)} – ${fmt(grandHigh)}`;
+  document.getElementById('summary-grand').textContent = fmt(grandTotal);
+  document.getElementById('summary-mode-label').textContent = mode === 'lean' ? 'Lean Estimate' : 'Comfortable Estimate';
+
+  // Summary grid
+  const sg = document.getElementById('summary-grid');
+  sg.innerHTML = phases.map(p => `
+    <div>
+      <div class="summary-phase-label">${p.phase}</div>
+      <div class="summary-phase-total" style="color:${p.color}">${fmt(phaseTotal(p))}</div>
+    </div>
+  `).join('');
+
+  // Phases
+  const container = document.getElementById('phases-container');
+  container.innerHTML = phases.map(p => {
+    const total = phaseTotal(p);
+    const isOpen = openPhase === p.id;
+    const tasksHtml = p.tasks.map((t, i) => {
+      const cost = mode === 'lean' ? t.low : t.high;
+      const ps = priorityStyle[t.priority];
+      const label = t.priority.charAt(0).toUpperCase() + t.priority.slice(1);
+      return `
+        <div class="task-row">
+          <div>
+            <div class="task-name">${t.task}</div>
+            <div class="task-owner">${t.owner}</div>
+          </div>
+          <div class="task-weeks">${t.weeks}w</div>
+          <div class="task-priority">
+            <span class="priority-badge" style="background:${ps.bg};color:${ps.text};border:1px solid ${ps.text}33">${label}</span>
+          </div>
+          <div class="task-cost">${cost === 0 ? '—' : fmt(cost)}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="phase-block ${isOpen ? 'open' : ''}" style="--phase-color-alpha: ${p.color}55">
+        <button class="phase-header" onclick="togglePhase(${p.id})">
+          <span class="phase-icon" style="color:${p.color}">${p.icon}</span>
+          <span class="phase-name">${p.phase}</span>
+          <span class="phase-total" style="color:${p.color}">${fmt(total)}</span>
+          <span class="phase-chevron">${isOpen ? '−' : '+'}</span>
+        </button>
+        <div class="phase-body">
+          <div class="col-headers">
+            <span>Task</span><span style="text-align:right">Timeline</span><span style="text-align:right">Priority</span><span style="text-align:right">Est. Cost</span>
+          </div>
+          ${tasksHtml}
+          <div class="phase-footer">
+            <span class="phase-footer-label">Phase Total</span>
+            <span class="phase-footer-total" style="color:${p.color}">${fmt(total)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>
